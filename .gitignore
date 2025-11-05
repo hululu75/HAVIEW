@@ -1,0 +1,10 @@
+# Configuration locale
+config.php
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
