@@ -109,7 +109,9 @@ Configurez votre serveur web pour pointer vers le dossier du projet et accédez-
 
 ## Utilisation
 
-### Affichage des entités
+### Pages disponibles
+
+#### Dashboard principal (index.php)
 
 Le dashboard affiche automatiquement toutes vos entités Home Assistant organisées par domaines :
 - Lumières
@@ -118,6 +120,16 @@ Le dashboard affiche automatiquement toutes vos entités Home Assistant organis�
 - Climatisation
 - Volets
 - Et bien d'autres...
+
+#### Page capteurs filtrée (sensors.php)
+
+Page dédiée pour afficher uniquement certains capteurs spécifiques :
+- Affichage simplifié et épuré
+- Cartes visuelles pour température et humidité
+- Rafraîchissement automatique toutes les 30 secondes
+- Filtrage par nom de pièce (ex: "YY的房间")
+
+Accès : `http://localhost:8000/sensors.php`
 
 ### Recherche
 

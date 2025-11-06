@@ -228,7 +228,8 @@ function formatLastUpdated($timestamp) {
             <p>Dernière mise à jour: <?= date('d/m/Y H:i:s') ?></p>
             <p>
                 <a href="?refresh=1">🔄 Rafraîchir</a> |
-                <a href="debug.php">🔍 Page de diagnostic</a>
+                <a href="sensors.php">🌡️ Capteurs YY</a> |
+                <a href="debug.php">🔍 Diagnostic</a>
             </p>
         </footer>
     </div>
