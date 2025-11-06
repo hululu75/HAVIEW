@@ -22,10 +22,29 @@ $client = new HomeAssistantClient(
     $config['timeout'] ?? 10
 );
 
+// Obtenir le groupe de capteurs actuel depuis l'URL ou utiliser le défaut
+$currentGroupId = $_GET['group'] ?? ($config['default_sensor_group'] ?? null);
+$sensorGroups = $config['sensor_groups'] ?? [];
+$currentGroup = null;
+
+// Trouver le groupe actuel
+foreach ($sensorGroups as $group) {
+    if ($group['id'] === $currentGroupId) {
+        $currentGroup = $group;
+        break;
+    }
+}
+
+// Si le groupe n'est pas trouvé, utiliser le premier groupe disponible
+if (!$currentGroup && !empty($sensorGroups)) {
+    $currentGroup = $sensorGroups[0];
+    $currentGroupId = $currentGroup['id'];
+}
+
 // Gérer les erreurs
 $error = null;
 $states = [];
-$haConfig = null;
+$sensorsData = [];
 
 try {
     // Vérifier la connexion
@@ -41,45 +60,29 @@ try {
         $states = [];
     }
 
-    // Récupérer la configuration Home Assistant
-    $haConfig = $client->getConfig();
+    // Créer un index des états par entity_id pour un accès rapide
+    $statesById = [];
+    foreach ($states as $state) {
+        $statesById[$state['entity_id']] = $state;
+    }
+
+    // Obtenir les données pour les capteurs configurés du groupe actuel
+    if ($currentGroup && isset($currentGroup['sensors'])) {
+        foreach ($currentGroup['sensors'] as $sensorConfig) {
+            $entityId = $sensorConfig['entity_id'];
+            if (isset($statesById[$entityId])) {
+                $sensorsData[] = [
+                    'config' => $sensorConfig,
+                    'state' => $statesById[$entityId],
+                ];
+            }
+        }
+    }
 
 } catch (Exception $e) {
     $error = $e->getMessage();
     $states = [];
-    $haConfig = null;
-}
-
-// Filtrer pour ne garder que les capteurs spécifiques
-// On cherche les entités qui contiennent "YY的房间" et qui sont température ou humidité
-$filteredEntities = [];
-
-if (!empty($states)) {
-    foreach ($states as $state) {
-        $entityId = $state['entity_id'];
-        $friendlyName = $state['attributes']['friendly_name'] ?? $entityId;
-
-        // Vérifier si c'est un capteur de "YY的房间"
-        if (stripos($friendlyName, 'YY的房间') !== false || stripos($friendlyName, 'YY') !== false) {
-            // Vérifier si c'est température ou humidité
-            if (stripos($friendlyName, 'Température') !== false ||
-                stripos($friendlyName, 'Temperature') !== false ||
-                stripos($friendlyName, '温度') !== false ||
-                stripos($entityId, 'temperature') !== false) {
-                $filteredEntities[] = $state;
-            } elseif ((stripos($friendlyName, 'Humidité') !== false ||
-                       stripos($friendlyName, 'Humidity') !== false ||
-                       stripos($friendlyName, '湿度') !== false ||
-                       stripos($entityId, 'humidity') !== false) &&
-                      // Exclure les capteurs de batterie
-                      stripos($friendlyName, 'batterie') === false &&
-                      stripos($friendlyName, 'battery') === false &&
-                      stripos($entityId, 'battery') === false &&
-                      stripos($entityId, 'batterie') === false) {
-                $filteredEntities[] = $state;
-            }
-        }
-    }
+    $sensorsData = [];
 }
 
 // Fonction pour formater la dernière mise à jour
@@ -137,6 +140,36 @@ function formatLastUpdated($timestamp) {
 
         .language-selector a.active {
             background: #667eea;
+            color: white;
+        }
+
+        .group-selector {
+            display: flex;
+            gap: 15px;
+            margin: 30px 0;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .group-btn {
+            padding: 12px 30px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1.1em;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        .group-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+        }
+
+        .group-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
@@ -203,6 +236,10 @@ function formatLastUpdated($timestamp) {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
+        .sensor-card-default {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
         .sensor-card-link {
             text-decoration: none;
             color: inherit;
@@ -247,9 +284,21 @@ function formatLastUpdated($timestamp) {
 
     <div class="container">
         <header>
-            <h1>🌡️ <?= t('sensors_title') ?></h1>
+            <h1>🌡️ <?= $currentGroup ? ($currentGroup['name'][$currentLang] ?? $currentGroup['name']['fr']) : t('sensors_title') ?></h1>
             <p class="subtitle"><?= t('sensors_subtitle') ?></p>
         </header>
+
+        <?php if (count($sensorGroups) > 1): ?>
+            <!-- Sélecteur de groupe de capteurs -->
+            <div class="group-selector">
+                <?php foreach ($sensorGroups as $group): ?>
+                    <a href="?group=<?= urlencode($group['id']) ?>&lang=<?= $currentLang ?>"
+                       class="group-btn <?= $group['id'] === $currentGroupId ? 'active' : '' ?>">
+                        <?= $group['name'][$currentLang] ?? $group['name']['fr'] ?>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
 
         <?php if ($error): ?>
             <div class="error-message">
@@ -263,31 +312,35 @@ function formatLastUpdated($timestamp) {
                 <?php endif; ?>
             </div>
         <?php else: ?>
-            <?php if (!empty($filteredEntities)): ?>
+            <?php if (!empty($sensorsData)): ?>
                 <div class="sensor-grid">
-                    <?php foreach ($filteredEntities as $entity): ?>
+                    <?php foreach ($sensorsData as $sensorData): ?>
                         <?php
-                        $friendlyName = $entity['attributes']['friendly_name'] ?? $entity['entity_id'];
-                        $isTemperature = stripos($friendlyName, 'Température') !== false ||
-                                       stripos($friendlyName, 'Temperature') !== false ||
-                                       stripos($friendlyName, '温度') !== false ||
-                                       stripos($entity['entity_id'], 'temperature') !== false;
-                        $cardClass = $isTemperature ? 'temperature-card' : 'humidity-card';
-                        $icon = $isTemperature ? '🌡️' : '💧';
-                        $sensorType = $isTemperature ? 'temperature' : 'humidity';
+                        $sensorConfig = $sensorData['config'];
+                        $state = $sensorData['state'];
+                        $sensorType = $sensorConfig['type'];
+                        $sensorName = $sensorConfig['name'][$currentLang] ?? $sensorConfig['name']['fr'];
+                        $icon = $sensorConfig['icon'] ?? '📊';
+
+                        // Définir la classe CSS selon le type
+                        $cardClass = match($sensorType) {
+                            'temperature' => 'temperature-card',
+                            'humidity' => 'humidity-card',
+                            default => 'sensor-card-default',
+                        };
                         ?>
-                        <a href="history.php?sensor=<?= $sensorType ?>" class="sensor-card-link">
+                        <a href="history.php?group=<?= urlencode($currentGroupId) ?>&sensor=<?= urlencode($sensorType) ?>&lang=<?= $currentLang ?>" class="sensor-card-link">
                             <div class="sensor-card <?= $cardClass ?>">
                                 <div class="sensor-icon"><?= $icon ?></div>
-                                <div class="sensor-name"><?= htmlspecialchars($friendlyName) ?></div>
+                                <div class="sensor-name"><?= htmlspecialchars($sensorName) ?></div>
                                 <div class="sensor-value">
-                                    <?= htmlspecialchars($entity['state']) ?>
-                                    <?php if (isset($entity['attributes']['unit_of_measurement'])): ?>
-                                        <span class="sensor-unit"><?= htmlspecialchars($entity['attributes']['unit_of_measurement']) ?></span>
+                                    <?= htmlspecialchars($state['state']) ?>
+                                    <?php if (isset($state['attributes']['unit_of_measurement'])): ?>
+                                        <span class="sensor-unit"><?= htmlspecialchars($state['attributes']['unit_of_measurement']) ?></span>
                                     <?php endif; ?>
                                 </div>
                                 <div class="sensor-updated">
-                                    <?= t('updated_ago') ?> <?= formatLastUpdated($entity['last_updated']) ?>
+                                    <?= t('updated_ago') ?> <?= formatLastUpdated($state['last_updated']) ?>
                                 </div>
                                 <div class="click-hint">📈 <?= t('view_history') ?></div>
                             </div>

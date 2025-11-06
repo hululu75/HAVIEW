@@ -3,6 +3,10 @@
  * Page d'historique avec support WebSocket pour les statistics long-terme
  */
 
+// Charger le système de traduction
+require_once 'languages.php';
+$currentLang = getCurrentLanguage();
+
 // Charger la configuration
 if (!file_exists('config.php')) {
     die('Erreur: Le fichier config.php n\'existe pas. Copiez config.example.php vers config.php et configurez vos paramètres.');
@@ -18,57 +22,61 @@ $client = new HomeAssistantClient(
     $config['timeout'] ?? 10
 );
 
-// Récupérer les états actuels pour trouver les capteurs
+// Obtenir le groupe de capteurs actuel depuis l'URL ou utiliser le défaut
+$currentGroupId = $_GET['group'] ?? ($config['default_sensor_group'] ?? null);
+$sensorGroups = $config['sensor_groups'] ?? [];
+$currentGroup = null;
+
+// Trouver le groupe actuel
+foreach ($sensorGroups as $group) {
+    if ($group['id'] === $currentGroupId) {
+        $currentGroup = $group;
+        break;
+    }
+}
+
+// Si le groupe n'est pas trouvé, utiliser le premier groupe disponible
+if (!$currentGroup && !empty($sensorGroups)) {
+    $currentGroup = $sensorGroups[0];
+    $currentGroupId = $currentGroup['id'];
+}
+
+// Récupérer les états actuels
 $states = [];
 $error = null;
+$sensors = [];
 
 try {
     $states = $client->getStates();
     if (!is_array($states)) {
         $states = [];
     }
-} catch (Exception $e) {
-    $error = $e->getMessage();
-}
 
-// Filtrer pour trouver les capteurs de YY
-$sensors = [];
-if (!empty($states)) {
+    // Créer un index des états par entity_id
+    $statesById = [];
     foreach ($states as $state) {
-        $entityId = $state['entity_id'];
-        $friendlyName = $state['attributes']['friendly_name'] ?? $entityId;
+        $statesById[$state['entity_id']] = $state;
+    }
 
-        // Exclure les capteurs de batterie
-        if (stripos($friendlyName, 'batterie') !== false ||
-            stripos($friendlyName, 'battery') !== false ||
-            stripos($entityId, 'battery') !== false) {
-            continue;
-        }
+    // Construire le tableau des sensors depuis la configuration
+    if ($currentGroup && isset($currentGroup['sensors'])) {
+        foreach ($currentGroup['sensors'] as $sensorConfig) {
+            $entityId = $sensorConfig['entity_id'];
+            $sensorType = $sensorConfig['type'];
 
-        // Vérifier si c'est un capteur de "YY的房间"
-        if (stripos($friendlyName, 'YY的房间') !== false || stripos($friendlyName, 'YY') !== false) {
-            // Vérifier si c'est température ou humidité
-            if (stripos($friendlyName, 'Température') !== false ||
-                stripos($friendlyName, 'Temperature') !== false ||
-                stripos($friendlyName, '温度') !== false ||
-                stripos($entityId, 'temperature') !== false) {
-                $sensors['temperature'] = [
+            if (isset($statesById[$entityId])) {
+                $state = $statesById[$entityId];
+                $sensors[$sensorType] = [
                     'entity_id' => $entityId,
-                    'name' => $friendlyName,
-                    'unit' => $state['attributes']['unit_of_measurement'] ?? ''
-                ];
-            } elseif (stripos($friendlyName, 'Humidité') !== false ||
-                      stripos($friendlyName, 'Humidity') !== false ||
-                      stripos($friendlyName, '湿度') !== false ||
-                      stripos($entityId, 'humidity') !== false) {
-                $sensors['humidity'] = [
-                    'entity_id' => $entityId,
-                    'name' => $friendlyName,
-                    'unit' => $state['attributes']['unit_of_measurement'] ?? ''
+                    'name' => $sensorConfig['name'][$currentLang] ?? $sensorConfig['name']['fr'],
+                    'unit' => $state['attributes']['unit_of_measurement'] ?? '',
+                    'icon' => $sensorConfig['icon'] ?? '📊',
                 ];
             }
         }
     }
+} catch (Exception $e) {
+    $error = $e->getMessage();
 }
 
 // Parse l'URL pour le WebSocket
@@ -300,33 +308,34 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
     </style>
 </head>
 <body>
+    <div class="language-selector" style="position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; z-index: 1000;">
+        <a href="?group=<?= urlencode($currentGroupId) ?>&sensor=<?= $_GET['sensor'] ?? '' ?>&lang=zh" style="padding: 8px 15px; background: white; color: #667eea; text-decoration: none; border-radius: 5px; font-weight: 600; <?= $currentLang === 'zh' ? 'background: #667eea; color: white;' : '' ?>">中文</a>
+        <a href="?group=<?= urlencode($currentGroupId) ?>&sensor=<?= $_GET['sensor'] ?? '' ?>&lang=en" style="padding: 8px 15px; background: white; color: #667eea; text-decoration: none; border-radius: 5px; font-weight: 600; <?= $currentLang === 'en' ? 'background: #667eea; color: white;' : '' ?>">EN</a>
+        <a href="?group=<?= urlencode($currentGroupId) ?>&sensor=<?= $_GET['sensor'] ?? '' ?>&lang=fr" style="padding: 8px 15px; background: white; color: #667eea; text-decoration: none; border-radius: 5px; font-weight: 600; <?= $currentLang === 'fr' ? 'background: #667eea; color: white;' : '' ?>">FR</a>
+    </div>
+
     <div class="container">
         <div class="header">
-            <h1>📈 Historique - YY的房间</h1>
-            <p>Visualisation des données historiques avec support WebSocket</p>
-            <a href="sensors.php" class="back-link">← Retour aux capteurs</a>
+            <h1>📈 <?= $currentGroup ? ($currentGroup['name'][$currentLang] ?? $currentGroup['name']['fr']) : t('history_title') ?></h1>
+            <p><?= t('history_subtitle') ?></p>
+            <a href="sensors.php?group=<?= urlencode($currentGroupId) ?>&lang=<?= $currentLang ?>" class="back-link">← <?= t('back_to_sensors') ?></a>
         </div>
 
         <?php if ($error): ?>
             <div class="error">
-                <strong>Erreur:</strong> <?= htmlspecialchars($error) ?>
+                <strong><?= t('error') ?>:</strong> <?= htmlspecialchars($error) ?>
             </div>
         <?php elseif (empty($sensors)): ?>
             <div class="warning">
-                <strong>Attention:</strong> Aucun capteur trouvé pour YY的房间
+                <strong><?= t('warning') ?>:</strong> <?= t('no_sensors_found') ?>
             </div>
         <?php else: ?>
             <div class="sensor-tabs">
-                <?php if (isset($sensors['temperature'])): ?>
-                    <button class="sensor-tab" data-sensor="temperature">
-                        🌡️ <?= htmlspecialchars($sensors['temperature']['name']) ?>
+                <?php foreach ($sensors as $type => $sensor): ?>
+                    <button class="sensor-tab" data-sensor="<?= $type ?>">
+                        <?= $sensor['icon'] ?> <?= htmlspecialchars($sensor['name']) ?>
                     </button>
-                <?php endif; ?>
-                <?php if (isset($sensors['humidity'])): ?>
-                    <button class="sensor-tab" data-sensor="humidity">
-                        💧 <?= htmlspecialchars($sensors['humidity']['name']) ?>
-                    </button>
-                <?php endif; ?>
+                <?php endforeach; ?>
             </div>
 
             <!-- Informations de debug (visible seulement si DEBUG_MODE = true) -->
