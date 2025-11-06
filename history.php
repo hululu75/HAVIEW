@@ -214,6 +214,12 @@ if (!empty($states)) {
                 <button class="period-btn" data-period="year">最近一年</button>
             </div>
 
+            <!-- Debug区域 -->
+            <div class="chart-container" style="background: #f0f0f0;">
+                <h3>🔍 调试信息</h3>
+                <div id="debug-info" style="font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; background: white; padding: 10px; border-radius: 5px;"></div>
+            </div>
+
             <!-- 温度图表 -->
             <?php if (isset($sensors['temperature'])): ?>
             <div class="chart-container">
@@ -224,6 +230,7 @@ if (!empty($states)) {
                     当前: <?= htmlspecialchars($sensors['temperature']['current_value']) ?> <?= htmlspecialchars($sensors['temperature']['unit']) ?>
                 </div>
                 <div id="temp-stats" class="stats-grid"></div>
+                <div id="temp-raw-data" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
                 <div class="chart-wrapper">
                     <canvas id="temperatureChart"></canvas>
                 </div>
@@ -240,6 +247,7 @@ if (!empty($states)) {
                     当前: <?= htmlspecialchars($sensors['humidity']['current_value']) ?> <?= htmlspecialchars($sensors['humidity']['unit']) ?>
                 </div>
                 <div id="humidity-stats" class="stats-grid"></div>
+                <div id="humidity-raw-data" style="margin-top: 10px; font-size: 12px; color: #666;"></div>
                 <div class="chart-wrapper">
                     <canvas id="humidityChart"></canvas>
                 </div>
@@ -264,14 +272,33 @@ if (!empty($states)) {
         let temperatureChart = null;
         let humidityChart = null;
 
+        // Fonction de log pour le debug
+        function debugLog(message) {
+            console.log(message);
+            const debugDiv = document.getElementById('debug-info');
+            if (debugDiv) {
+                const time = new Date().toLocaleTimeString();
+                debugDiv.innerHTML += `[${time}] ${message}<br>`;
+                debugDiv.scrollTop = debugDiv.scrollHeight;
+            }
+        }
+
+        // Vérifier que Chart.js est chargé
+        debugLog('📊 Début du script');
+        debugLog('Chart.js disponible: ' + (typeof Chart !== 'undefined' ? '✓ OUI' : '✗ NON'));
+        debugLog('Capteurs trouvés: ' + JSON.stringify(Object.keys(sensors)));
+
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
+            debugLog('📝 DOM chargé, initialisation...');
+
             // Event listeners pour les boutons de période
             document.querySelectorAll('.period-btn').forEach(btn => {
                 btn.addEventListener('click', function() {
                     document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
                     this.classList.add('active');
                     currentPeriod = this.dataset.period;
+                    debugLog('🔄 Période changée: ' + currentPeriod);
                     loadAllData();
                 });
             });
@@ -293,11 +320,25 @@ if (!empty($states)) {
         // Charger l'historique pour un capteur
         async function loadHistory(type, entityId) {
             try {
-                const response = await fetch(`api-history.php?entity_id=${encodeURIComponent(entityId)}&period=${currentPeriod}`);
+                debugLog(`📡 Chargement ${type}: ${entityId}`);
+                const url = `api-history.php?entity_id=${encodeURIComponent(entityId)}&period=${currentPeriod}`;
+                debugLog(`URL: ${url}`);
+
+                const response = await fetch(url);
+                debugLog(`Réponse HTTP: ${response.status}`);
+
                 const result = await response.json();
+                debugLog(`Données reçues: ${result.data ? result.data.length : 0} points`);
+
+                // Afficher les données brutes
+                const rawDataDiv = document.getElementById(`${type}-raw-data`);
+                if (rawDataDiv) {
+                    rawDataDiv.innerHTML = `<strong>Données API:</strong> ${result.data.length} points (${result.start} → ${result.end})`;
+                }
 
                 if (result.success && result.data.length > 0) {
                     const data = result.data;
+                    debugLog(`✓ ${type}: ${data.length} points valides`);
 
                     // Calculer les statistiques
                     const values = data.map(d => d.value);
@@ -314,9 +355,11 @@ if (!empty($states)) {
                     // Créer ou mettre à jour le graphique
                     createChart(type, data, sensors[type].name, sensors[type].unit);
                 } else {
-                    console.error('Pas de données pour', type);
+                    debugLog(`⚠ Pas de données pour ${type}`);
+                    console.error('Pas de données pour', type, result);
                 }
             } catch (error) {
+                debugLog(`❌ Erreur ${type}: ${error.message}`);
                 console.error('Erreur lors du chargement des données:', error);
             }
         }
@@ -346,8 +389,18 @@ if (!empty($states)) {
 
         // Créer ou mettre à jour un graphique
         function createChart(type, data, name, unit) {
+            debugLog(`📈 Création graphique ${type}...`);
+
             const canvasId = type === 'temperature' ? 'temperatureChart' : 'humidityChart';
-            const ctx = document.getElementById(canvasId).getContext('2d');
+            const canvas = document.getElementById(canvasId);
+
+            if (!canvas) {
+                debugLog(`❌ Canvas ${canvasId} non trouvé!`);
+                return;
+            }
+
+            const ctx = canvas.getContext('2d');
+            debugLog(`Canvas ${canvasId}: ${canvas.width}x${canvas.height}`);
 
             // Couleurs selon le type
             const colors = type === 'temperature'
@@ -373,8 +426,21 @@ if (!empty($states)) {
                 humidityChart.destroy();
             }
 
+            // Vérifier Chart.js
+            if (typeof Chart === 'undefined') {
+                debugLog('❌ Chart.js n\'est pas chargé!');
+                return;
+            }
+
+            debugLog(`Données pour Chart: ${chartData.length} points`);
+            if (chartData.length > 0) {
+                debugLog(`Premier point: x=${chartData[0].x}, y=${chartData[0].y}`);
+                debugLog(`Dernier point: x=${chartData[chartData.length-1].x}, y=${chartData[chartData.length-1].y}`);
+            }
+
             // Créer le nouveau graphique
-            const chart = new Chart(ctx, {
+            try {
+                const chart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     datasets: [{
@@ -433,13 +499,19 @@ if (!empty($states)) {
                         }
                     }
                 }
-            });
+                });
 
-            // Sauvegarder la référence
-            if (type === 'temperature') {
-                temperatureChart = chart;
-            } else {
-                humidityChart = chart;
+                // Sauvegarder la référence
+                if (type === 'temperature') {
+                    temperatureChart = chart;
+                } else {
+                    humidityChart = chart;
+                }
+
+                debugLog(`✓ Graphique ${type} créé avec succès!`);
+            } catch (error) {
+                debugLog(`❌ Erreur création graphique ${type}: ${error.message}`);
+                console.error('Erreur Chart.js:', error);
             }
         }
     </script>
