@@ -51,10 +51,15 @@ if (!empty($states)) {
                     'current_value' => $state['state'],
                     'unit' => $state['attributes']['unit_of_measurement'] ?? ''
                 ];
-            } elseif (stripos($friendlyName, 'Humidité') !== false ||
-                      stripos($friendlyName, 'Humidity') !== false ||
-                      stripos($friendlyName, '湿度') !== false ||
-                      stripos($entityId, 'humidity') !== false) {
+            } elseif ((stripos($friendlyName, 'Humidité') !== false ||
+                       stripos($friendlyName, 'Humidity') !== false ||
+                       stripos($friendlyName, '湿度') !== false ||
+                       stripos($entityId, 'humidity') !== false) &&
+                      // Exclure les capteurs de batterie
+                      stripos($friendlyName, 'batterie') === false &&
+                      stripos($friendlyName, 'battery') === false &&
+                      stripos($entityId, 'battery') === false &&
+                      stripos($entityId, 'batterie') === false) {
                 $sensors['humidity'] = [
                     'entity_id' => $entityId,
                     'name' => $friendlyName,
@@ -367,6 +372,10 @@ if (!empty($states)) {
         // Afficher les statistiques
         function displayStats(type, stats, unit) {
             const statsDiv = document.getElementById(`${type}-stats`);
+            if (!statsDiv) {
+                debugLog(`⚠ Stats div pour ${type} non trouvé`);
+                return;
+            }
             statsDiv.innerHTML = `
                 <div class="stat-box">
                     <div class="stat-label">最小值</div>

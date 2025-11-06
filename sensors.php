@@ -63,10 +63,15 @@ if (!empty($states)) {
                 stripos($friendlyName, '温度') !== false ||
                 stripos($entityId, 'temperature') !== false) {
                 $filteredEntities[] = $state;
-            } elseif (stripos($friendlyName, 'Humidité') !== false ||
-                      stripos($friendlyName, 'Humidity') !== false ||
-                      stripos($friendlyName, '湿度') !== false ||
-                      stripos($entityId, 'humidity') !== false) {
+            } elseif ((stripos($friendlyName, 'Humidité') !== false ||
+                       stripos($friendlyName, 'Humidity') !== false ||
+                       stripos($friendlyName, '湿度') !== false ||
+                       stripos($entityId, 'humidity') !== false) &&
+                      // Exclure les capteurs de batterie
+                      stripos($friendlyName, 'batterie') === false &&
+                      stripos($friendlyName, 'battery') === false &&
+                      stripos($entityId, 'battery') === false &&
+                      stripos($entityId, 'batterie') === false) {
                 $filteredEntities[] = $state;
             }
         }
