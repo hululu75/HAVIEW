@@ -673,17 +673,38 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                 chart.destroy();
             }
 
+            // Format des labels selon la période
             const labels = data.map(item => {
                 const date = new Date(item.timestamp);
-                return date.toLocaleString('fr-FR', {
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
+
+                // Pour les périodes longues (mois/année), afficher l'année
+                if (currentPeriod === 'year') {
+                    return date.toLocaleString('fr-FR', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                } else if (currentPeriod === 'month') {
+                    return date.toLocaleString('fr-FR', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit'
+                    });
+                } else {
+                    // Jour et semaine
+                    return date.toLocaleString('fr-FR', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
             });
 
             const values = data.map(item => item.value);
+
+            // Garder les timestamps originaux pour le tooltip
+            const timestamps = data.map(item => item.timestamp);
 
             chart = new Chart(ctx, {
                 type: 'line',
@@ -708,7 +729,26 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                         },
                         tooltip: {
                             mode: 'index',
-                            intersect: false
+                            intersect: false,
+                            callbacks: {
+                                title: function(context) {
+                                    // Afficher la date complète avec année, mois, jour, heure
+                                    const index = context[0].dataIndex;
+                                    const date = new Date(timestamps[index]);
+
+                                    return date.toLocaleString('fr-FR', {
+                                        year: 'numeric',
+                                        month: 'long',
+                                        day: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit',
+                                        second: '2-digit'
+                                    });
+                                },
+                                label: function(context) {
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1);
+                                }
+                            }
                         }
                     },
                     scales: {
