@@ -348,6 +348,10 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                 <canvas id="historyChart"></canvas>
             </div>
 
+            <!--
+                Zone de débogage (cachée par défaut)
+                Pour activer : changer DEBUG_MODE = false en DEBUG_MODE = true dans le JavaScript ci-dessous
+            -->
             <div id="debugInfo" style="display: none;">
                 <strong>Debug Info:</strong><br>
                 <div id="debugContent"></div>
@@ -363,6 +367,15 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             wsUrl: <?= json_encode($wsUrl) ?>,
             sensors: <?= json_encode($sensors) ?>
         };
+
+        /**
+         * Mode Debug
+         * Pour activer les logs de débogage et diagnostiquer les problèmes :
+         * 1. Changer DEBUG_MODE = false en DEBUG_MODE = true
+         * 2. Rafraîchir la page
+         * 3. La zone "Debug Info" apparaîtra en bas de la page avec tous les logs
+         */
+        const DEBUG_MODE = false;
 
         let currentSensor = 'temperature';
         let currentPeriod = 'day';
@@ -803,6 +816,9 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
         }
 
         function debug(message, isError = false) {
+            // Ne rien afficher si le mode debug est désactivé
+            if (!DEBUG_MODE) return;
+
             console.log(message);
             const debugDiv = document.getElementById('debugContent');
             if (debugDiv) {
