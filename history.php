@@ -318,7 +318,7 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
         <?php else: ?>
             <div class="sensor-tabs">
                 <?php if (isset($sensors['temperature'])): ?>
-                    <button class="sensor-tab active" data-sensor="temperature">
+                    <button class="sensor-tab" data-sensor="temperature">
                         🌡️ <?= htmlspecialchars($sensors['temperature']['name']) ?>
                     </button>
                 <?php endif; ?>
@@ -378,7 +378,11 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
          */
         const DEBUG_MODE = false;
 
-        let currentSensor = 'temperature';
+        // Lire le paramètre URL pour le capteur
+        const urlParams = new URLSearchParams(window.location.search);
+        const sensorFromUrl = urlParams.get('sensor');
+
+        let currentSensor = (sensorFromUrl === 'humidity' || sensorFromUrl === 'temperature') ? sensorFromUrl : 'temperature';
         let currentPeriod = 'day';
         let chart = null;
         let ws = null;
@@ -389,10 +393,22 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
+            // Activer le bon onglet de capteur au chargement
+            activateSensorTab(currentSensor);
+
             setupEventListeners();
             initWebSocket();
             loadData();
         });
+
+        function activateSensorTab(sensor) {
+            document.querySelectorAll('.sensor-tab').forEach(tab => {
+                tab.classList.remove('active');
+                if (tab.dataset.sensor === sensor) {
+                    tab.classList.add('active');
+                }
+            });
+        }
 
         function setupEventListeners() {
             // Tabs de capteurs

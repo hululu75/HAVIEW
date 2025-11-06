@@ -174,6 +174,27 @@ function formatLastUpdated($timestamp) {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
         }
 
+        .sensor-card-link {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .click-hint {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            font-size: 0.9em;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .sensor-card:hover .click-hint {
+            opacity: 1;
+        }
+
         .no-sensors {
             text-align: center;
             padding: 60px 20px;
@@ -218,21 +239,25 @@ function formatLastUpdated($timestamp) {
                                        stripos($entity['entity_id'], 'temperature') !== false;
                         $cardClass = $isTemperature ? 'temperature-card' : 'humidity-card';
                         $icon = $isTemperature ? '🌡️' : '💧';
+                        $sensorType = $isTemperature ? 'temperature' : 'humidity';
                         ?>
-                        <div class="sensor-card <?= $cardClass ?>">
-                            <div class="sensor-icon"><?= $icon ?></div>
-                            <div class="sensor-name"><?= htmlspecialchars($friendlyName) ?></div>
-                            <div class="sensor-value">
-                                <?= htmlspecialchars($entity['state']) ?>
-                                <?php if (isset($entity['attributes']['unit_of_measurement'])): ?>
-                                    <span class="sensor-unit"><?= htmlspecialchars($entity['attributes']['unit_of_measurement']) ?></span>
-                                <?php endif; ?>
+                        <a href="history.php?sensor=<?= $sensorType ?>" class="sensor-card-link">
+                            <div class="sensor-card <?= $cardClass ?>">
+                                <div class="sensor-icon"><?= $icon ?></div>
+                                <div class="sensor-name"><?= htmlspecialchars($friendlyName) ?></div>
+                                <div class="sensor-value">
+                                    <?= htmlspecialchars($entity['state']) ?>
+                                    <?php if (isset($entity['attributes']['unit_of_measurement'])): ?>
+                                        <span class="sensor-unit"><?= htmlspecialchars($entity['attributes']['unit_of_measurement']) ?></span>
+                                    <?php endif; ?>
+                                </div>
+                                <div class="sensor-updated">
+                                    Mis à jour il y a <?= formatLastUpdated($entity['last_updated']) ?>
+                                </div>
+                                <div class="sensor-id"><?= htmlspecialchars($entity['entity_id']) ?></div>
+                                <div class="click-hint">📈 Cliquez pour voir l'historique</div>
                             </div>
-                            <div class="sensor-updated">
-                                Mis à jour il y a <?= formatLastUpdated($entity['last_updated']) ?>
-                            </div>
-                            <div class="sensor-id"><?= htmlspecialchars($entity['entity_id']) ?></div>
-                        </div>
+                        </a>
                     <?php endforeach; ?>
                 </div>
             <?php else: ?>
