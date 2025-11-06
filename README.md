@@ -108,6 +108,23 @@ Cliquez sur "Attributs" sous chaque entité pour voir tous ses attributs au form
 
 Cliquez sur le lien "🔄 Rafraîchir" en bas de page pour recharger les données.
 
+### Page de diagnostic
+
+Si vous rencontrez des problèmes (aucune entité trouvée, erreurs de connexion, etc.), utilisez la page de diagnostic :
+
+```
+http://localhost:8000/debug.php
+```
+
+Cette page affiche :
+- Les paramètres de configuration
+- Les extensions PHP requises
+- Les tests de connexion à Home Assistant
+- La réponse brute de l'API
+- Les entités retournées
+
+C'est l'outil idéal pour comprendre ce qui ne fonctionne pas !
+
 ## API Home Assistant
 
 Le client PHP implémente les endpoints suivants :
@@ -160,19 +177,45 @@ Le fichier `HomeAssistantClient.php` peut être étendu pour ajouter d'autres ap
 
 ## Dépannage
 
-### Erreur de connexion
+### 🔍 Utilisez d'abord la page de diagnostic
+
+**Avant tout**, accédez à `debug.php` pour diagnostiquer automatiquement le problème :
+
+```
+http://localhost:8000/debug.php
+```
+
+Cette page va vérifier :
+- ✅ Configuration (URL, token)
+- ✅ Extensions PHP (cURL, JSON)
+- ✅ Connexion à Home Assistant
+- ✅ Récupération des états
+- ✅ Nombre d'entités trouvées
+
+### Problèmes courants
+
+#### Aucune entité trouvée
+
+- **Vérifiez sur `debug.php`** combien d'entités sont retournées
+- Assurez-vous que votre Home Assistant a des entités configurées
+- Vérifiez que le token a les bonnes permissions
+- Essayez de régénérer un nouveau token
+
+#### Erreur de connexion
 
 - Vérifiez que l'URL de Home Assistant est correcte
 - Vérifiez que le token est valide
 - Vérifiez que Home Assistant est accessible depuis votre serveur PHP
 - Vérifiez que l'extension cURL est activée : `php -m | grep curl`
+- **Consultez la page `debug.php`** pour voir le code HTTP exact
 
-### Erreur 401 Unauthorized
+#### Erreur 401 Unauthorized
 
 - Votre token est invalide ou a expiré
 - Générez un nouveau token dans Home Assistant
+- Copiez-le exactement (sans espaces avant/après)
 
-### Page blanche
+#### Page blanche
 
 - Activez l'affichage des erreurs PHP :
   ```php
@@ -180,6 +223,7 @@ Le fichier `HomeAssistantClient.php` peut être étendu pour ajouter d'autres ap
   error_reporting(E_ALL);
   ```
 - Vérifiez les logs PHP
+- Utilisez `debug.php` qui affiche déjà les erreurs
 
 ## Contribuer
 

@@ -201,14 +201,28 @@ function formatLastUpdated($timestamp) {
 
             <?php if (empty($entitiesByDomain)): ?>
                 <div class="info-message">
-                    Aucune entité trouvée dans Home Assistant.
+                    <strong>Aucune entité trouvée dans Home Assistant.</strong>
+                    <p style="margin-top: 10px;">Causes possibles :</p>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li>Votre instance Home Assistant n'a pas encore d'entités configurées</li>
+                        <li>Le token d'accès n'a pas les bonnes permissions</li>
+                        <li>Il y a un problème de connexion à l'API</li>
+                    </ul>
+                    <p style="margin-top: 15px;">
+                        <a href="debug.php" style="background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
+                            🔍 Ouvrir la page de diagnostic
+                        </a>
+                    </p>
                 </div>
             <?php endif; ?>
         <?php endif; ?>
 
         <footer>
             <p>Dernière mise à jour: <?= date('d/m/Y H:i:s') ?></p>
-            <p><a href="?refresh=1">🔄 Rafraîchir</a></p>
+            <p>
+                <a href="?refresh=1">🔄 Rafraîchir</a> |
+                <a href="debug.php">🔍 Page de diagnostic</a>
+            </p>
         </footer>
     </div>
 
