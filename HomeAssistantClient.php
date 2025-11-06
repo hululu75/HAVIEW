@@ -143,6 +143,9 @@ class HomeAssistantClient
             $params['filter_entity_id'] = $entityId;
         }
 
+        // Important: inclure tous les changements, pas seulement les significatifs
+        $params['significant_changes_only'] = 'false';
+
         if (!empty($params)) {
             $endpoint .= '?' . http_build_query($params);
         }
