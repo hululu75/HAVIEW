@@ -3,6 +3,10 @@
  * API pour récupérer l'historique des capteurs
  */
 
+// Activer le reporting d'erreurs pour le debug
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
 header('Content-Type: application/json');
 
 // Charger la configuration
@@ -115,6 +119,9 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => $e->getMessage()
+        'error' => $e->getMessage(),
+        'trace' => $e->getTraceAsString(),
+        'file' => $e->getFile(),
+        'line' => $e->getLine()
     ]);
 }
