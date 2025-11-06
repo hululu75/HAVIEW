@@ -237,6 +237,12 @@ if (!empty($states)) {
                 <button class="period-btn" data-period="year">最近一年</button>
             </div>
 
+            <div style="background: #e7f3ff; padding: 15px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #1890ff;">
+                <strong>ℹ️ 提示：</strong> Home Assistant 默认只保留 <strong>10天</strong> 的历史数据。
+                如果"最近一月"或"最近一年"没有数据，这是正常的。
+                要保存更长时间的数据，需要在 Home Assistant 配置中修改 <code>recorder.purge_keep_days</code> 设置。
+            </div>
+
             <!-- Debug区域 -->
             <div class="chart-container" style="background: #f0f0f0;">
                 <h3>🔍 调试信息</h3>
@@ -378,7 +384,38 @@ if (!empty($states)) {
                     // Créer ou mettre à jour le graphique
                     createChart(type, data, sensors[type].name, sensors[type].unit);
                 } else {
-                    debugLog(`⚠ Pas de données pour ${type}`);
+                    debugLog(`⚠ Pas de données pour ${type} (période: ${currentPeriod})`);
+
+                    // Afficher un message à l'utilisateur
+                    const rawDataDiv = document.getElementById(`${type}-raw-data`);
+                    if (rawDataDiv) {
+                        rawDataDiv.innerHTML = `<div style="background: #fff3cd; padding: 15px; border-radius: 5px; border: 2px solid #ffc107; margin: 10px 0;">
+                            <strong>⚠️ 无历史数据</strong><br>
+                            时间段: ${result.start} → ${result.end}<br>
+                            <br>
+                            可能原因：<br>
+                            • Home Assistant 未保存此时间段的数据<br>
+                            • 历史数据已被清理（默认保留10天）<br>
+                            • 传感器在此期间未报告数据<br>
+                            <br>
+                            💡 <strong>解决方案：</strong><br>
+                            • 选择更短的时间段（如"最近一天"或"最近一周"）<br>
+                            • 在 Home Assistant 的 configuration.yaml 中配置 recorder 保留更长时间的数据<br>
+                            <pre style="background: #f8f8f8; padding: 10px; border-radius: 5px; margin-top: 10px;">
+recorder:
+  purge_keep_days: 365  # 保留365天</pre>
+                        </div>`;
+                    }
+
+                    // Effacer le graphique s'il existe
+                    if (type === 'temperature' && temperatureChart) {
+                        temperatureChart.destroy();
+                        temperatureChart = null;
+                    } else if (type === 'humidity' && humidityChart) {
+                        humidityChart.destroy();
+                        humidityChart = null;
+                    }
+
                     console.error('Pas de données pour', type, result);
                 }
             } catch (error) {
