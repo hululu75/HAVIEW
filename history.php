@@ -627,12 +627,21 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             // Afficher le premier point pour debug
             debug('Premier point: ' + JSON.stringify(stats[0]));
 
-            const chartData = stats.map(item => ({
-                timestamp: item.start || item.end,
-                value: item.mean || item.state
-            }));
+            // Convertir les timestamps Unix (millisecondes) en dates ISO
+            const chartData = stats.map(item => {
+                // item.start et item.end sont en millisecondes Unix
+                const timestamp = item.start || item.end;
+                // Convertir en ISO string pour Chart.js
+                const dateStr = new Date(timestamp).toISOString();
+
+                return {
+                    timestamp: dateStr,
+                    value: item.mean || item.state
+                };
+            });
 
             debug('✅ Affichage de ' + chartData.length + ' points sur le graphique');
+            debug('Premier point converti: ' + JSON.stringify(chartData[0]));
             displayChart(chartData, sensor);
             displayStats(chartData, sensor);
         }
