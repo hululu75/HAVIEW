@@ -48,12 +48,37 @@ return [
 
 ### 3. Générer un token d'accès dans Home Assistant
 
+#### Option A : Utiliser l'outil de test de token (RECOMMANDÉ)
+
+Lancez d'abord le serveur PHP :
+
+```bash
+php -S localhost:8000
+```
+
+Puis ouvrez dans votre navigateur :
+
+```
+http://localhost:8000/test-token.php
+```
+
+Cette page vous guidera pour :
+- ✅ Générer un token étape par étape
+- ✅ Tester si votre token fonctionne
+- ✅ Détecter les problèmes courants (espaces, token trop court, etc.)
+- ✅ Générer automatiquement votre fichier `config.php`
+
+#### Option B : Manuellement
+
 1. Connectez-vous à votre Home Assistant
-2. Cliquez sur votre profil (en bas à gauche)
+2. Cliquez sur votre profil (icône en bas à gauche)
 3. Faites défiler jusqu'à **"Long-Lived Access Tokens"**
 4. Cliquez sur **"Create Token"**
 5. Donnez-lui un nom (ex: "PHP Dashboard")
-6. Copiez le token généré dans votre `config.php`
+6. **Copiez le token ENTIER** (il est très long, assurez-vous de tout copier !)
+7. Collez le token dans votre `config.php`
+
+⚠️ **Important :** Le token ne sera affiché qu'une seule fois ! Si vous le perdez, vous devrez en générer un nouveau.
 
 ### 4. Lancer le serveur
 
@@ -177,9 +202,25 @@ Le fichier `HomeAssistantClient.php` peut être étendu pour ajouter d'autres ap
 
 ## Dépannage
 
-### 🔍 Utilisez d'abord la page de diagnostic
+### 🔍 Outils de diagnostic
 
-**Avant tout**, accédez à `debug.php` pour diagnostiquer automatiquement le problème :
+#### 1. Page de test du token
+
+Si vous avez une **erreur 401 (Unauthorized)** :
+
+```
+http://localhost:8000/test-token.php
+```
+
+Cette page vous aide à :
+- 🔑 Tester si votre token est valide
+- 🔍 Détecter les problèmes (espaces, token incomplet, etc.)
+- 📝 Générer automatiquement la configuration
+- ✅ Vérifier la connexion en temps réel
+
+#### 2. Page de diagnostic complète
+
+Pour tous les autres problèmes :
 
 ```
 http://localhost:8000/debug.php
@@ -211,9 +252,13 @@ Cette page va vérifier :
 
 #### Erreur 401 Unauthorized
 
-- Votre token est invalide ou a expiré
-- Générez un nouveau token dans Home Assistant
-- Copiez-le exactement (sans espaces avant/après)
+**⚠️ C'est l'erreur la plus courante !**
+
+- Votre token est invalide, expiré ou mal copié
+- Utilisez **`test-token.php`** pour diagnostiquer et corriger le problème
+- Le token doit être complet (généralement 150+ caractères)
+- Vérifiez qu'il n'y a pas d'espaces ou de retours à la ligne
+- Si nécessaire, générez un nouveau token dans Home Assistant
 
 #### Page blanche
 

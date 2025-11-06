@@ -141,6 +141,13 @@ function formatLastUpdated($timestamp) {
         <?php if ($error): ?>
             <div class="error-message">
                 <strong>Erreur:</strong> <?= htmlspecialchars($error) ?>
+                <?php if (strpos($error, '401') !== false): ?>
+                    <p style="margin-top: 15px;">
+                        <a href="test-token.php" style="background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
+                            🔑 Tester et générer un nouveau token
+                        </a>
+                    </p>
+                <?php endif; ?>
             </div>
         <?php else: ?>
             <div class="stats">

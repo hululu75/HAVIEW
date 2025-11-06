@@ -135,7 +135,16 @@ try {
     } else {
         echo "<p class='error'>✗ Échec de connexion</p>";
         if ($httpCode == 401) {
-            echo "<div class='info'>⚠️ Erreur 401: Token invalide ou expiré. Générez un nouveau token dans Home Assistant.</div>";
+            echo "<div class='info'>
+                ⚠️ <strong>Erreur 401: Token invalide ou expiré.</strong><br><br>
+                Le token d'accès n'est pas valide. Cela peut être dû à :<br>
+                • Token expiré ou révoqué<br>
+                • Token mal copié (espaces, caractères manquants)<br>
+                • Token jamais généré<br><br>
+                <a href='test-token.php' style='background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold; margin-top: 10px;'>
+                    🔑 Tester et générer un nouveau token
+                </a>
+            </div>";
         } elseif ($httpCode == 0) {
             echo "<div class='info'>⚠️ Impossible de joindre le serveur. Vérifiez l'URL et que Home Assistant est accessible.</div>";
         }
