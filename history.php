@@ -76,7 +76,10 @@ if (!empty($states)) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>历史数据 - YY的房间</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>历史数据 - YY的房间 v2.0</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
@@ -196,6 +199,21 @@ if (!empty($states)) {
         <header>
             <h1>📊 历史数据 - YY的房间</h1>
             <p class="subtitle">温度和湿度历史记录</p>
+            <!-- Debug PHP -->
+            <div style="background: #ffeb3b; padding: 10px; margin: 10px 0; border-radius: 5px; font-size: 12px;">
+                <strong>PHP Debug:</strong><br>
+                Sensors array keys: <?= implode(', ', array_keys($sensors)) ?><br>
+                <?php if (isset($sensors['temperature'])): ?>
+                    ✓ Temperature sensor found: <?= htmlspecialchars($sensors['temperature']['entity_id']) ?><br>
+                <?php else: ?>
+                    ✗ Temperature sensor NOT found<br>
+                <?php endif; ?>
+                <?php if (isset($sensors['humidity'])): ?>
+                    ✓ Humidity sensor found: <?= htmlspecialchars($sensors['humidity']['entity_id']) ?><br>
+                <?php else: ?>
+                    ✗ Humidity sensor NOT found<br>
+                <?php endif; ?>
+            </div>
         </header>
 
         <?php if ($error): ?>
