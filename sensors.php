@@ -251,6 +251,7 @@ function formatLastUpdated($timestamp) {
             <p>Dernière mise à jour: <?= date('d/m/Y H:i:s') ?></p>
             <p>
                 <a href="?refresh=1">🔄 Rafraîchir</a> |
+                <a href="history.php">📈 Historique</a> |
                 <a href="index.php">📊 Toutes les entités</a> |
                 <a href="debug.php">🔍 Diagnostic</a>
             </p>

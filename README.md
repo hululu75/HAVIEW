@@ -131,6 +131,17 @@ Page dédiée pour afficher uniquement certains capteurs spécifiques :
 
 Accès : `http://localhost:8000/sensors.php`
 
+#### Page d'historique (history.php)
+
+Page avec graphiques pour visualiser l'historique des données :
+- Graphiques interactifs avec Chart.js
+- Sélection de période : 1 jour, 1 semaine, 1 mois, 1 an
+- Statistiques : minimum, maximum, moyenne
+- Affichage séparé pour température et humidité
+- Zoom et navigation dans les graphiques
+
+Accès : `http://localhost:8000/history.php`
+
 ### Recherche
 
 Utilisez la barre de recherche en haut pour filtrer les entités par :

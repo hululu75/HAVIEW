@@ -229,6 +229,7 @@ function formatLastUpdated($timestamp) {
             <p>
                 <a href="?refresh=1">🔄 Rafraîchir</a> |
                 <a href="sensors.php">🌡️ Capteurs YY</a> |
+                <a href="history.php">📈 Historique</a> |
                 <a href="debug.php">🔍 Diagnostic</a>
             </p>
         </footer>
