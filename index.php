@@ -32,11 +32,18 @@ try {
     // Récupérer les états des entités
     $states = $client->getStates();
 
+    // S'assurer que $states est un tableau
+    if (!is_array($states)) {
+        $states = [];
+    }
+
     // Récupérer la configuration Home Assistant
     $haConfig = $client->getConfig();
 
 } catch (Exception $e) {
     $error = $e->getMessage();
+    $states = [];
+    $haConfig = null;
 }
 
 // Organiser les entités par domaine

@@ -63,7 +63,10 @@ class HomeAssistantClient
             throw new Exception("Erreur HTTP $httpCode: " . $response);
         }
 
-        return json_decode($response, true);
+        $decoded = json_decode($response, true);
+
+        // Retourner un tableau vide si le décodage JSON échoue
+        return $decoded !== null ? $decoded : [];
     }
 
     /**
