@@ -3,6 +3,10 @@
  * Page filtrée pour afficher uniquement certains capteurs
  */
 
+// Charger le système de traduction
+require_once 'languages.php';
+$currentLang = getCurrentLanguage();
+
 // Charger la configuration
 if (!file_exists('config.php')) {
     die('Erreur: Le fichier config.php n\'existe pas. Copiez config.example.php vers config.php et configurez vos paramètres.');
@@ -85,13 +89,16 @@ function formatLastUpdated($timestamp) {
     $diff = $now->diff($date);
 
     if ($diff->days > 0) {
-        return $diff->days . ' jour' . ($diff->days > 1 ? 's' : '');
+        $unit = $diff->days > 1 ? t('days') : t('day');
+        return $diff->days . ' ' . $unit;
     } elseif ($diff->h > 0) {
-        return $diff->h . ' heure' . ($diff->h > 1 ? 's' : '');
+        $unit = $diff->h > 1 ? t('hours') : t('hour');
+        return $diff->h . ' ' . $unit;
     } elseif ($diff->i > 0) {
-        return $diff->i . ' minute' . ($diff->i > 1 ? 's' : '');
+        $unit = $diff->i > 1 ? t('minutes') : t('minute');
+        return $diff->i . ' ' . $unit;
     } else {
-        return 'À l\'instant';
+        return t('just_now');
     }
 }
 ?>
@@ -103,6 +110,36 @@ function formatLastUpdated($timestamp) {
     <title>Capteurs YY - Home Assistant</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        .language-selector {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .language-selector a {
+            padding: 8px 15px;
+            background: white;
+            color: #667eea;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .language-selector a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+
+        .language-selector a.active {
+            background: #667eea;
+            color: white;
+        }
+
         .sensor-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -158,14 +195,6 @@ function formatLastUpdated($timestamp) {
             margin-top: 20px;
         }
 
-        .sensor-id {
-            text-align: center;
-            opacity: 0.6;
-            font-size: 0.8em;
-            margin-top: 10px;
-            font-family: 'Courier New', monospace;
-        }
-
         .temperature-card {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
         }
@@ -210,15 +239,21 @@ function formatLastUpdated($timestamp) {
     </style>
 </head>
 <body>
+    <div class="language-selector">
+        <a href="?lang=zh" class="<?= $currentLang === 'zh' ? 'active' : '' ?>">中文</a>
+        <a href="?lang=en" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
+        <a href="?lang=fr" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
+    </div>
+
     <div class="container">
         <header>
-            <h1>🌡️ Capteurs - YY的房间</h1>
-            <p class="subtitle">Température et Humidité</p>
+            <h1>🌡️ <?= t('sensors_title') ?></h1>
+            <p class="subtitle"><?= t('sensors_subtitle') ?></p>
         </header>
 
         <?php if ($error): ?>
             <div class="error-message">
-                <strong>Erreur:</strong> <?= htmlspecialchars($error) ?>
+                <strong><?= t('error') ?>:</strong> <?= htmlspecialchars($error) ?>
                 <?php if (strpos($error, '401') !== false): ?>
                     <p style="margin-top: 15px;">
                         <a href="test-token.php" style="background: #667eea; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; display: inline-block; font-weight: bold;">
@@ -252,10 +287,9 @@ function formatLastUpdated($timestamp) {
                                     <?php endif; ?>
                                 </div>
                                 <div class="sensor-updated">
-                                    Mis à jour il y a <?= formatLastUpdated($entity['last_updated']) ?>
+                                    <?= t('updated_ago') ?> <?= formatLastUpdated($entity['last_updated']) ?>
                                 </div>
-                                <div class="sensor-id"><?= htmlspecialchars($entity['entity_id']) ?></div>
-                                <div class="click-hint">📈 Cliquez pour voir l'historique</div>
+                                <div class="click-hint">📈 <?= t('view_history') ?></div>
                             </div>
                         </a>
                     <?php endforeach; ?>
@@ -263,10 +297,9 @@ function formatLastUpdated($timestamp) {
             <?php else: ?>
                 <div class="no-sensors">
                     <div class="no-sensors-icon">🔍</div>
-                    <h2>Aucun capteur trouvé</h2>
+                    <h2><?= t('no_sensors_found') ?></h2>
                     <p style="margin-top: 15px; color: #666;">
-                        Aucun capteur de température ou d'humidité trouvé pour "YY的房间".<br>
-                        Vérifiez que les entités existent dans Home Assistant.
+                        <?= t('no_sensors_text') ?>
                     </p>
                     <p style="margin-top: 20px;">
                         <a href="index.php" style="color: #667eea; font-weight: bold; text-decoration: none;">
@@ -278,13 +311,7 @@ function formatLastUpdated($timestamp) {
         <?php endif; ?>
 
         <footer>
-            <p>Dernière mise à jour: <?= date('d/m/Y H:i:s') ?></p>
-            <p>
-                <a href="?refresh=1">🔄 Rafraîchir</a> |
-                <a href="history.php">📈 Historique</a> |
-                <a href="index.php">📊 Toutes les entités</a> |
-                <a href="debug.php">🔍 Diagnostic</a>
-            </p>
+            <p><?= t('last_update') ?>: <?= date('d/m/Y H:i:s') ?></p>
         </footer>
     </div>
 
