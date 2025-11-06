@@ -151,6 +151,33 @@ class HomeAssistantClient
     }
 
     /**
+     * Récupère les statistiques long terme des entités
+     * @param string $startTime Timestamp de début (ISO 8601)
+     * @param string|null $endTime Timestamp de fin (ISO 8601)
+     * @param array $entityIds IDs des entités (tableau)
+     * @param string $period Période de regroupement: '5minute', 'hour', 'day', 'month'
+     * @return array Statistiques
+     */
+    public function getStatistics($startTime, $endTime = null, $entityIds = [], $period = 'hour')
+    {
+        $endpoint = 'history/statistics/during';
+
+        $params = [
+            'start_time' => $startTime,
+            'statistic_ids' => implode(',', $entityIds),
+            'period' => $period
+        ];
+
+        if ($endTime) {
+            $params['end_time'] = $endTime;
+        }
+
+        $endpoint .= '?' . http_build_query($params);
+
+        return $this->request($endpoint);
+    }
+
+    /**
      * Vérifie la connexion à Home Assistant
      * @return bool True si la connexion fonctionne
      */
