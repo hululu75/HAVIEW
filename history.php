@@ -421,7 +421,7 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
 
                 ws.onmessage = (event) => {
                     const data = JSON.parse(event.data);
-                    debug('WebSocket message reçu: ' + data.type);
+                    debug('WebSocket message reçu: ' + data.type + (data.id ? ' (id: ' + data.id + ')' : ''));
 
                     if (data.type === 'auth_required') {
                         debug('Authentification requise, envoi du token...');
@@ -442,6 +442,8 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                         disableLongTermPeriods('Authentification WebSocket échouée');
                     } else if (data.type === 'result') {
                         handleStatisticsResult(data);
+                    } else {
+                        debug('Message WebSocket non géré: ' + JSON.stringify(data).substring(0, 200));
                     }
                 };
 
@@ -576,9 +578,19 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
 
         function handleStatisticsResult(data) {
             debug('Résultat statistics reçu');
+            debug('Structure complète: ' + JSON.stringify(data).substring(0, 500));
 
-            if (!data.success) {
-                debug('Erreur dans la réponse: ' + JSON.stringify(data), true);
+            // Vérifier s'il y a une erreur
+            if (data.error) {
+                debug('❌ Erreur WebSocket: ' + JSON.stringify(data.error), true);
+                loadHistoryViaRest(config.sensors[currentSensor].entity_id);
+                return;
+            }
+
+            // Pour le WebSocket API, type='result' signifie succès
+            // data.success n'existe pas toujours, on vérifie juste data.result
+            if (!data.result) {
+                debug('❌ Pas de champ result dans la réponse', true);
                 loadHistoryViaRest(config.sensors[currentSensor].entity_id);
                 return;
             }
@@ -587,18 +599,40 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             const sensor = config.sensors[currentSensor];
             const entityId = sensor.entity_id;
 
-            if (!result || !result[entityId] || result[entityId].length === 0) {
-                debug('Aucune donnée statistics, basculement sur REST API', true);
+            debug('Entity ID recherché: ' + entityId);
+            debug('Clés disponibles dans result: ' + Object.keys(result || {}).join(', '));
+
+            if (!result) {
+                debug('❌ Result est null ou undefined', true);
+                loadHistoryViaRest(entityId);
+                return;
+            }
+
+            if (!result[entityId]) {
+                debug('❌ Aucune donnée pour l\'entity_id: ' + entityId, true);
+                debug('Essai de basculement sur REST API');
                 loadHistoryViaRest(entityId);
                 return;
             }
 
             const stats = result[entityId];
+            debug('📊 Nombre de points statistics: ' + stats.length);
+
+            if (stats.length === 0) {
+                debug('⚠️ Statistics vides, basculement sur REST API', true);
+                loadHistoryViaRest(entityId);
+                return;
+            }
+
+            // Afficher le premier point pour debug
+            debug('Premier point: ' + JSON.stringify(stats[0]));
+
             const chartData = stats.map(item => ({
                 timestamp: item.start || item.end,
                 value: item.mean || item.state
             }));
 
+            debug('✅ Affichage de ' + chartData.length + ' points sur le graphique');
             displayChart(chartData, sensor);
             displayStats(chartData, sensor);
         }
