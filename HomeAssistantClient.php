@@ -160,10 +160,11 @@ class HomeAssistantClient
      */
     public function getStatistics($startTime, $endTime = null, $entityIds = [], $period = 'hour')
     {
-        $endpoint = 'history/statistics/during';
+        // Format: /api/history/statistics/<start_time>
+        // Note: start_time doit être en format ISO 8601
+        $endpoint = 'history/statistics/' . urlencode($startTime);
 
         $params = [
-            'start_time' => $startTime,
             'statistic_ids' => implode(',', $entityIds),
             'period' => $period
         ];
