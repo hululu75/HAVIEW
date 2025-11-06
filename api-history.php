@@ -54,23 +54,49 @@ switch ($period) {
 }
 
 try {
-    // Récupérer l'historique
-    $history = $client->getHistory(
-        $start->format('Y-m-d\TH:i:s'),
-        null,
-        $entityId
-    );
-
     // Traiter les données
     $data = [];
 
-    if (!empty($history) && isset($history[0])) {
-        foreach ($history[0] as $entry) {
-            if (isset($entry['state']) && is_numeric($entry['state'])) {
-                $data[] = [
-                    'timestamp' => $entry['last_changed'],
-                    'value' => (float)$entry['state']
-                ];
+    // Pour les périodes longues (month, year), utiliser les statistiques
+    // Pour les périodes courtes (day, week), utiliser l'historique détaillé
+    if ($period === 'month' || $period === 'year') {
+        // Utiliser l'API statistics pour les données long terme
+        $statsPeriod = $period === 'year' ? 'day' : 'hour';
+
+        $stats = $client->getStatistics(
+            $start->format('Y-m-d\TH:i:s'),
+            $now->format('Y-m-d\TH:i:s'),
+            [$entityId],
+            $statsPeriod
+        );
+
+        // Traiter les statistiques
+        if (!empty($stats) && isset($stats[$entityId])) {
+            foreach ($stats[$entityId] as $entry) {
+                if (isset($entry['mean']) && is_numeric($entry['mean'])) {
+                    $data[] = [
+                        'timestamp' => $entry['start'],
+                        'value' => (float)$entry['mean']
+                    ];
+                }
+            }
+        }
+    } else {
+        // Utiliser l'API history pour les données court terme
+        $history = $client->getHistory(
+            $start->format('Y-m-d\TH:i:s'),
+            null,
+            $entityId
+        );
+
+        if (!empty($history) && isset($history[0])) {
+            foreach ($history[0] as $entry) {
+                if (isset($entry['state']) && is_numeric($entry['state'])) {
+                    $data[] = [
+                        'timestamp' => $entry['last_changed'],
+                        'value' => (float)$entry['state']
+                    ];
+                }
             }
         }
     }
@@ -79,6 +105,7 @@ try {
         'success' => true,
         'entity_id' => $entityId,
         'period' => $period,
+        'api_used' => ($period === 'month' || $period === 'year') ? 'statistics' : 'history',
         'start' => $start->format('Y-m-d H:i:s'),
         'end' => $now->format('Y-m-d H:i:s'),
         'data' => $data
