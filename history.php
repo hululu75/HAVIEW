@@ -329,7 +329,8 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                 <?php endif; ?>
             </div>
 
-            <div class="api-method" id="apiMethodInfo">
+            <!-- Informations de debug (visible seulement si DEBUG_MODE = true) -->
+            <div class="api-method" id="apiMethodInfo" style="display: none;">
                 <strong>📡 Méthode API:</strong> <span id="apiMethodText">Chargement...</span>
             </div>
 
@@ -492,16 +493,18 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
                 }
             });
 
-            // Afficher un message d'information
-            const msgDiv = document.getElementById('wsStatusMessage');
-            if (msgDiv) {
-                msgDiv.className = 'warning';
-                msgDiv.style.display = 'block';
-                msgDiv.innerHTML = `
-                    <strong>⚠️ Statistics long-terme indisponibles</strong><br>
-                    ${reason}<br>
-                    <small>Les périodes "Mois" et "Année" sont désactivées. Utilisez "Jour" ou "Semaine" pour voir l'historique récent.</small>
-                `;
+            // Afficher un message d'information (seulement en mode debug)
+            if (DEBUG_MODE) {
+                const msgDiv = document.getElementById('wsStatusMessage');
+                if (msgDiv) {
+                    msgDiv.className = 'warning';
+                    msgDiv.style.display = 'block';
+                    msgDiv.innerHTML = `
+                        <strong>⚠️ Statistics long-terme indisponibles</strong><br>
+                        ${reason}<br>
+                        <small>Les périodes "Mois" et "Année" sont désactivées. Utilisez "Jour" ou "Semaine" pour voir l'historique récent.</small>
+                    `;
+                }
             }
 
             // Si on était sur mois ou année, basculer sur jour
@@ -518,6 +521,8 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
         }
 
         function showWebSocketStatus(connected) {
+            if (!DEBUG_MODE) return; // Ne rien afficher si mode debug désactivé
+
             const msgDiv = document.getElementById('wsStatusMessage');
             if (msgDiv) {
                 if (connected) {
@@ -809,9 +814,13 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
         }
 
         function updateApiMethodInfo(method) {
+            if (!DEBUG_MODE) return; // Ne rien afficher si mode debug désactivé
+
+            const container = document.getElementById('apiMethodInfo');
             const elem = document.getElementById('apiMethodText');
-            if (elem) {
+            if (container && elem) {
                 elem.textContent = method;
+                container.style.display = 'block'; // Afficher seulement en mode debug
             }
         }
 
