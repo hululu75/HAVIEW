@@ -96,6 +96,8 @@ try {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Bearer ' . $config['access_token'],
         'Content-Type: application/json',
@@ -103,10 +105,19 @@ try {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     $curlError = curl_error($ch);
     curl_close($ch);
 
     echo "<table>
+        <tr>
+            <td>URL demandée:</td>
+            <td>" . htmlspecialchars($url) . "</td>
+        </tr>
+        <tr>
+            <td>URL finale:</td>
+            <td>" . htmlspecialchars($effectiveUrl) . ($effectiveUrl != $url ? " <span class='warning'>(redirigé)</span>" : "") . "</td>
+        </tr>
         <tr>
             <td>Code HTTP:</td>
             <td>" . ($httpCode == 200 ? "<span class='success'>$httpCode OK</span>" : "<span class='error'>$httpCode</span>") . "</td>
@@ -150,6 +161,8 @@ try {
     curl_setopt($ch, CURLOPT_URL, $url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_TIMEOUT, 10);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections
+    curl_setopt($ch, CURLOPT_MAXREDIRS, 5);
     curl_setopt($ch, CURLOPT_HTTPHEADER, [
         'Authorization: Bearer ' . $config['access_token'],
         'Content-Type: application/json',
@@ -157,10 +170,19 @@ try {
 
     $response = curl_exec($ch);
     $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+    $effectiveUrl = curl_getinfo($ch, CURLINFO_EFFECTIVE_URL);
     $curlError = curl_error($ch);
     curl_close($ch);
 
     echo "<table>
+        <tr>
+            <td>URL demandée:</td>
+            <td>" . htmlspecialchars($url) . "</td>
+        </tr>
+        <tr>
+            <td>URL finale:</td>
+            <td>" . htmlspecialchars($effectiveUrl) . ($effectiveUrl != $url ? " <span class='warning'>(redirigé)</span>" : "") . "</td>
+        </tr>
         <tr>
             <td>Code HTTP:</td>
             <td>" . ($httpCode == 200 ? "<span class='success'>$httpCode OK</span>" : "<span class='error'>$httpCode</span>") . "</td>

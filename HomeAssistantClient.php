@@ -44,6 +44,8 @@ class HomeAssistantClient
         curl_setopt($ch, CURLOPT_TIMEOUT, $this->timeout);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
+        curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true); // Suivre les redirections automatiquement
+        curl_setopt($ch, CURLOPT_MAXREDIRS, 5); // Maximum 5 redirections
 
         if ($data !== null && ($method === 'POST' || $method === 'PUT')) {
             curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
