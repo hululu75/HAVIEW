@@ -277,9 +277,9 @@ function formatLastUpdated($timestamp) {
 </head>
 <body>
     <div class="language-selector">
-        <a href="?lang=zh" class="<?= $currentLang === 'zh' ? 'active' : '' ?>">中文</a>
-        <a href="?lang=en" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
-        <a href="?lang=fr" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
+        <a href="?group=<?= urlencode($currentGroupId) ?>&lang=zh" class="<?= $currentLang === 'zh' ? 'active' : '' ?>">中文</a>
+        <a href="?group=<?= urlencode($currentGroupId) ?>&lang=en" class="<?= $currentLang === 'en' ? 'active' : '' ?>">EN</a>
+        <a href="?group=<?= urlencode($currentGroupId) ?>&lang=fr" class="<?= $currentLang === 'fr' ? 'active' : '' ?>">FR</a>
     </div>
 
     <div class="container">
