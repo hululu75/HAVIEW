@@ -188,8 +188,17 @@ function t($key, $default = null) {
 if (isset($_GET['lang'])) {
     $requestedLang = $_GET['lang'];
     if (setLanguage($requestedLang)) {
-        // Rediriger pour éviter de garder le paramètre lang dans l'URL
+        // Rediriger en conservant les autres paramètres (sauf lang)
+        $params = $_GET;
+        unset($params['lang']); // Retirer lang car il est maintenant dans le cookie
+
+        $queryString = http_build_query($params);
         $redirect = strtok($_SERVER['REQUEST_URI'], '?');
+
+        if ($queryString) {
+            $redirect .= '?' . $queryString;
+        }
+
         header('Location: ' . $redirect);
         exit;
     }
