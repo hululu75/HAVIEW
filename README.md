@@ -127,7 +127,7 @@ Page dédiée pour afficher uniquement certains capteurs spécifiques :
 - Affichage simplifié et épuré
 - Cartes visuelles pour température et humidité
 - Rafraîchissement automatique toutes les 30 secondes
-- Filtrage par nom de pièce (ex: "YY的房间")
+- Filtrage par nom de pièce (ex: "YY's Room")
 
 Accès : `http://localhost:8000/sensors.php`
 

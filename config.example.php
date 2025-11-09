@@ -24,7 +24,7 @@ return [
     // Vous pouvez définir plusieurs groupes de capteurs
     // Chaque groupe peut contenir plusieurs capteurs avec leur type
     'sensor_groups' => [
-        // Groupe 1: YY的房间
+        // Group 1: YY's Room
         [
             'id' => 'yy_room',
             'name' => [
