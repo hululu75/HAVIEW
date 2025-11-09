@@ -11,9 +11,9 @@ $translations = [
         'view_history' => 'Cliquez pour voir l\'historique',
 
         // Page titles
-        'sensors_title' => 'Capteurs YY的房间',
+        'sensors_title' => 'Capteurs',
         'sensors_subtitle' => 'Données en temps réel',
-        'history_title' => 'Historique - YY的房间',
+        'history_title' => 'Historique',
         'history_subtitle' => 'Visualisation des données historiques',
 
         // Sensor types
@@ -36,7 +36,7 @@ $translations = [
         'updated_ago' => 'Mis à jour il y a',
         'last_update' => 'Dernière mise à jour',
         'no_sensors_found' => 'Aucun capteur trouvé',
-        'no_sensors_text' => 'Aucun capteur de température ou d\'humidité trouvé pour "YY的房间".',
+        'no_sensors_text' => 'Aucun capteur de température ou d\'humidité trouvé pour ce groupe.',
         'error' => 'Erreur',
         'warning' => 'Attention',
         'no_data' => 'Aucune donnée disponible pour cette période',
@@ -57,9 +57,9 @@ $translations = [
         'view_history' => 'Click to view history',
 
         // Page titles
-        'sensors_title' => 'YY\'s Room Sensors',
+        'sensors_title' => 'Sensors',
         'sensors_subtitle' => 'Real-time Data',
-        'history_title' => 'History - YY\'s Room',
+        'history_title' => 'History',
         'history_subtitle' => 'Historical Data Visualization',
 
         // Sensor types
@@ -82,7 +82,7 @@ $translations = [
         'updated_ago' => 'Updated',
         'last_update' => 'Last update',
         'no_sensors_found' => 'No sensors found',
-        'no_sensors_text' => 'No temperature or humidity sensors found for "YY\'s Room".',
+        'no_sensors_text' => 'No temperature or humidity sensors found for this group.',
         'error' => 'Error',
         'warning' => 'Warning',
         'no_data' => 'No data available for this period',
@@ -103,9 +103,9 @@ $translations = [
         'view_history' => '点击查看历史数据',
 
         // Page titles
-        'sensors_title' => 'YY的房间传感器',
+        'sensors_title' => '传感器',
         'sensors_subtitle' => '实时数据',
-        'history_title' => '历史数据 - YY的房间',
+        'history_title' => '历史数据',
         'history_subtitle' => '历史数据可视化',
 
         // Sensor types
@@ -128,7 +128,7 @@ $translations = [
         'updated_ago' => '更新于',
         'last_update' => '最后更新',
         'no_sensors_found' => '未找到传感器',
-        'no_sensors_text' => '未找到"YY的房间"的温度或湿度传感器。',
+        'no_sensors_text' => '未找到此分组的温度或湿度传感器。',
         'error' => '错误',
         'warning' => '警告',
         'no_data' => '此期间没有可用数据',
