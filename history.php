@@ -91,7 +91,7 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Historique - YY的房间</title>
+    <title><?= t('history_title') ?><?= $currentGroup ? ' - ' . ($currentGroup['name'][$currentLang] ?? $currentGroup['name']['fr']) : '' ?></title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -346,10 +346,10 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             <div id="wsStatusMessage" style="display: none;"></div>
 
             <div class="period-selector">
-                <button class="period-btn active" data-period="day">📅 Jour</button>
-                <button class="period-btn" data-period="week">📅 Semaine</button>
-                <button class="period-btn" data-period="month">📅 Mois</button>
-                <button class="period-btn" data-period="year">📅 Année</button>
+                <button class="period-btn active" data-period="day">📅 <?= t('period_day') ?></button>
+                <button class="period-btn" data-period="week">📅 <?= t('period_week') ?></button>
+                <button class="period-btn" data-period="month">📅 <?= t('period_month') ?></button>
+                <button class="period-btn" data-period="year">📅 <?= t('period_year') ?></button>
             </div>
 
             <div class="stats-container" id="statsContainer"></div>
@@ -376,6 +376,15 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             accessToken: <?= json_encode($config['access_token']) ?>,
             wsUrl: <?= json_encode($wsUrl) ?>,
             sensors: <?= json_encode($sensors) ?>
+        };
+
+        // Translations for JavaScript
+        const i18n = {
+            minimum: <?= json_encode(t('minimum')) ?>,
+            maximum: <?= json_encode(t('maximum')) ?>,
+            average: <?= json_encode(t('average')) ?>,
+            data_points: <?= json_encode(t('data_points')) ?>,
+            no_data: <?= json_encode(t('no_data')) ?>
         };
 
         /**
@@ -808,7 +817,7 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
             if (!container) return;
 
             if (data.length === 0) {
-                container.innerHTML = '<div class="warning">Aucune donnée disponible pour cette période</div>';
+                container.innerHTML = `<div class="warning">${i18n.no_data}</div>`;
                 return;
             }
 
@@ -820,19 +829,19 @@ $wsUrl = "$scheme://$host:$port/api/websocket";
 
             container.innerHTML = `
                 <div class="stat-card">
-                    <div class="stat-label">Minimum</div>
+                    <div class="stat-label">${i18n.minimum}</div>
                     <div class="stat-value">${min} ${sensor.unit}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Maximum</div>
+                    <div class="stat-label">${i18n.maximum}</div>
                     <div class="stat-value">${max} ${sensor.unit}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Moyenne</div>
+                    <div class="stat-label">${i18n.average}</div>
                     <div class="stat-value">${avg} ${sensor.unit}</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-label">Points de données</div>
+                    <div class="stat-label">${i18n.data_points}</div>
                     <div class="stat-value">${count}</div>
                 </div>
             `;
