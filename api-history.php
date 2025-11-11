@@ -73,35 +73,42 @@ try {
     );
 
     // Try to get statistics first (more efficient for longer periods)
-    $useStatistics = in_array($period, ['week', 'month', 'year']);
+    $useStatistics = in_array($period, ['month', 'year']);
+    $processedData = [];
 
     if ($useStatistics) {
-        $rawData = $client->getStatistics(
-            $startTimeStr,
-            $endTimeStr,
-            [$entityId],
-            $statisticsPeriod
-        );
+        // Try statistics API first
+        try {
+            $rawData = $client->getStatistics(
+                $startTimeStr,
+                $endTimeStr,
+                [$entityId],
+                $statisticsPeriod
+            );
 
-        // Process statistics data
-        $processedData = [];
-
-        if (isset($rawData[$entityId]) && is_array($rawData[$entityId])) {
-            foreach ($rawData[$entityId] as $item) {
-                if (isset($item['start']) && isset($item['mean'])) {
-                    $processedData[] = [
-                        'timestamp' => $item['start'],
-                        'value' => round((float)$item['mean'], 2)
-                    ];
+            if (isset($rawData[$entityId]) && is_array($rawData[$entityId])) {
+                foreach ($rawData[$entityId] as $item) {
+                    if (isset($item['start']) && isset($item['mean'])) {
+                        $processedData[] = [
+                            'timestamp' => $item['start'],
+                            'value' => round((float)$item['mean'], 2)
+                        ];
+                    }
                 }
             }
+        } catch (Exception $e) {
+            // Statistics failed, will fall back to history
         }
-    } else {
-        // Use regular history for short periods (day)
-        $rawData = $client->getHistory($startTimeStr, $endTimeStr, $entityId);
 
-        // Process history data
-        $processedData = [];
+        // If no statistics data, fall back to history API
+        if (empty($processedData)) {
+            $useStatistics = false;
+        }
+    }
+
+    // Use history API for day/week or as fallback
+    if (!$useStatistics) {
+        $rawData = $client->getHistory($startTimeStr, $endTimeStr, $entityId);
 
         if (is_array($rawData) && !empty($rawData)) {
             // History returns an array of arrays, one per entity
